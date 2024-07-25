@@ -1,0 +1,80 @@
+---
+# ROLE: NGINX
+#
+# DESCRIPTION:
+# This playbook provides a default NGINX install & config
+
+
+###############################################################################
+################### VARIABLE INITIALIZATION & TASK SETUP ######################
+###############################################################################
+
+# NGINX_REQUIRED_PORTS
+# A list of ports that should be supported for NGINX
+- name: Set NGINX_REQUIRED_PORTS set fact from env if possible
+  set_fact:
+    NGINX_REQUIRED_PORTS: "{{ lookup('env', 'NGINX_REQUIRED_PORTS') | default('') | trim | split(',') }}"
+  when: lookup('env', 'NGINX_REQUIRED_PORTS') | default('', true) | trim != ''
+- name: NGINX_REQUIRED_PORTS prompt user input if unset
+  pause:
+    prompt: "SET NGINX_REQUIRED_PORTS"
+    echo: yes
+  register: input
+  when: NGINX_REQUIRED_PORTS is not defined or NGINX_REQUIRED_PORTS == ''
+- name: NGINX_REQUIRED_PORTS set fact from user input
+  set_fact:
+    NGINX_REQUIRED_PORTS: "{{ input.user_input | default('') | trim | split(',') }}"
+  when: NGINX_REQUIRED_PORTS is not defined or NGINX_REQUIRED_PORTS == ''
+
+
+###############################################################################
+############################ ROLE IMPLEMENTATION ##############################
+###############################################################################
+
+
+# Step 1: Install NGINX
+
+- name: Install nginx
+  apt:
+    name:
+      - nginx
+    state: present
+
+# Step 2: Configure firewall rules
+
+- name: Set up basic ufw rules
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+  with_items: "{{ NGINX_REQUIRED_PORTS }}"
+  become: yes 
+
+# Step 3: Build a default NGINX site
+
+- name: Add default site configuration
+  copy:
+    src: default.conf
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: Enable default site
+  file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart nginx
+
+- name: Create default site file
+  copy:
+    content: "'Building castles in the air, laying foundations under them.' - Thoreau"
+    dest: /var/www/html/index.html
+    owner: 'www-data'
+    group: 'www-data'
+    mode: '0775'

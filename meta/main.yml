@@ -1,0 +1,12 @@
+galaxy_info:
+  author: Mark Hammonds
+  description: Baseline nginx installation
+  company: Bitmotive, LLC
+  license: Copyright
+  min_ansible_version: 2.1
+  platforms:
+    - name: Ubuntu LTS
+      versions:
+        - 22.04
+  galaxy_tags: []
+dependencies: []
