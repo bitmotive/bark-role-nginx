@@ -25,6 +25,9 @@
   set_fact:
     NGINX_REQUIRED_PORTS: "{{ input.user_input | default('') | trim | split(',') }}"
   when: NGINX_REQUIRED_PORTS is not defined or NGINX_REQUIRED_PORTS == ''
+- name: Ensure NGINX_REQUIRED_PORTS is a list
+  set_fact:
+    NGINX_REQUIRED_PORTS: "{{ NGINX_REQUIRED_PORTS | default('') | trim | split(',') }}"
 
 
 ###############################################################################
